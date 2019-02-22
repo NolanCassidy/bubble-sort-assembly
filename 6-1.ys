@@ -1,0 +1,97 @@
+.pos 0
+init:		irmovl Stack, %esp  	# Set up stack pointer
+				irmovl Stack, %ebp  	# Set up base pointer
+				call Main							# Execute main program
+				halt									# Terminate program
+
+# Array of 10 elements
+				.align 10
+array:	.long 0x0010
+				.long 0x0009
+				.long 0x0008
+				.long 0x0007
+				.long 0x0006
+				.long 0x0005
+				.long 0x0004
+				.long 0x0003
+				.long 0x0002
+				.long 0x0001
+
+
+
+.pos 0x104
+Main:		pushl %ebp
+				rrmovl %esp,%ebp
+				irmovl $10,%eax       #10 spots for array
+				pushl %eax 						#push 10 to eax
+				irmovl array,%edx     #array into edx
+				pushl %edx						#push edx
+				call Sort							#Sort(array, 10)
+        popl %eax
+        popl %edx
+				rrmovl %ebp,%esp
+				popl %ebp
+				ret
+
+Sort:		pushl %ebp
+				rrmovl %esp, %ebp
+				pushl %ecx
+        pushl %esi
+        pushl %edi
+				mrmovl 8(%ebp), %edx	#put array into ecx
+				mrmovl 12(%ebp), %eax #put 10 spot into edx
+
+Loop:   pushl %eax    # ammount of elements
+        rrmovl %edx, %esi
+        mrmovl (%esi),%edi    #first element as param
+        pushl %esi
+
+Loop2:  irmovl 4,%ecx   #incrementor
+				addl %ecx, %esi			#j++
+        mrmovl (%esi), %ecx
+				rrmovl %edi, %ebx
+				subl %ecx,%edi
+				jle Check
+				rrmovl %ecx, %edi     #get new param
+        popl %ecx
+        pushl %esi            #push new param
+
+Check:  irmovl 1, %ecx
+        subl %ecx, %eax
+        jg Loop2
+        pushl %edx
+        call Swap
+        popl %edx
+        popl %esi
+        popl %eax
+        irmovl 4, %ecx  #increment
+        addl %ecx, %edx   #next edx
+        irmovl 1, %ecx  #length of Array
+        subl %ecx, %eax #compare
+        jg Loop #check if loop needs to end
+        popl %edi
+        popl %esi
+        popl %ecx
+        rrmovl %ebp, %esp
+        popl %ebp
+        ret
+
+# int Swap(int *xp, int *yp)
+Swap:		pushl %ebp
+				rrmovl %esp,%ebp
+				pushl %ebx   					 #push callee-save register
+				mrmovl 8(%ebp),%ecx 	 # xp in %ecx
+				mrmovl 12(%ebp),%edx 	 # yp in %edx
+	# TODO - swap
+				mrmovl (%edx), %ebx    #yp in ebx
+				mrmovl (%ecx), %eax    #xp in eax
+				rmmovl %eax, (%edx)    #xp in edx
+				rmmovl %ebx, (%ecx)    #yp in ecx
+				popl %ebx
+				rrmovl %ebp, %esp
+				popl %ebp
+				ret
+
+# The stack starts here and grows to lower addresses
+	.pos 0x100
+Stack:
